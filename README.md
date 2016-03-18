@@ -45,6 +45,7 @@ $ mix deps.get
 ]} |> HTMLBuilder.encode!(pretty: true) |> IO.puts
 
 # <!DOCTYPE html>
+# <html>
 # <!-- This is a test -->
 # <head>
 #   <title>Hello!</title>
@@ -75,4 +76,5 @@ $ mix deps.get
 #     </ul>
 #   </span>
 # </body>
+# </html>
 ```
