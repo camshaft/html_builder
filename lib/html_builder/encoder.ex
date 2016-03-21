@@ -111,9 +111,17 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
   def encode({:__comment__, comment}, options) do
     ["<!-- ", HTMLBuilder.Encoder.encode(comment, options), " -->"]
   end
-  def encode({el, body}, options) when el in [:html, "html"] do
-    ["<!DOCTYPE html>",
-     HTMLBuilder.Encoder.encode(body, options)]
+  def encode({el, body}, options) when el in [:html, "html", 'html'] do
+    ["<!DOCTYPE html>", newline(%{pretty: true}),
+     "<html>",
+     HTMLBuilder.Encoder.encode(body, options),
+     "</html>", newline(options)]
+  end
+  def encode({el, attributes, body}, options) when el in [:html, "html", 'html'] do
+    ["<!DOCTYPE html>", newline(%{pretty: true}),
+     "<html", encode_attributes(attributes), ?>,
+     HTMLBuilder.Encoder.encode(body, options),
+     "</html>", newline(options)]
   end
 
   void_elements = ~W(
@@ -146,6 +154,9 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
       [?<, unquote(el_s), encode_attributes(attributes), ?>]
     end
     def encode({unquote(el_s), attributes}, _options) do
+      [?<, unquote(el_s), encode_attributes(attributes), ?>]
+    end
+    def encode({unquote(el_s), attributes, contents}, _options) when contents in [nil, []] do
       [?<, unquote(el_s), encode_attributes(attributes), ?>]
     end
     def encode({unquote(el), _, _}, _options) do
@@ -187,17 +198,21 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
         []
       {key, true} ->
         [" ", to_string(key)]
+      {key, ""} ->
+        [" ", to_string(key), "=\"\""]
       {key, value} ->
         [" ", to_string(key), ?=, encode_attribute_value(value)]
     end)
   end
 
   defp encode_attribute_value(value) when is_binary(value) do
-    {graphemes, has_spaces} = value
+    graphemes = value
     |> HTMLBuilder.Utils.grapheme_stream()
-    |> Enum.map_reduce(false, &replace_character/2)
+    |> Enum.map(&HTMLBuilder.Utils.escape_character/1)
 
-    if has_spaces do
+    must_quote = graphemes |> Enum.any?(&check_quote/1)
+
+    if must_quote do
       [?", graphemes, ?"]
     else
       graphemes
@@ -207,10 +222,6 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
     value |> to_string |> encode_attribute_value
   end
 
-  defp replace_character(" ", _) do
-    {" ", true}
-  end
-  defp replace_character(character, has_spaces) do
-    {HTMLBuilder.Utils.escape_character(character), has_spaces}
-  end
+  defp check_quote(character) when character in [" ", "\t", "\r", "\n", "\f", "\0", "\"", "'", "=", ">", "<", "`"], do: true
+  defp check_quote(character), do: false
 end

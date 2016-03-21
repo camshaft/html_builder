@@ -6,6 +6,14 @@ defmodule HTMLBuilderTest do
       nodes: "< Hello & Goodbye >",
       out: "&lt; Hello &amp; Goodbye &gt;"
     },
+    "Entities" => %{
+      nodes: "' \" & < > \0 \t \f \r \n + = ? ! # / . 運動 😀 &lt; &amp;",
+      out: "&apos; &quot; &amp; &lt; &gt;        + = ? ! # / . 運動 😀 &amp;lt; &amp;amp;"
+    },
+    "Quote" => %{
+      nodes: {"div", [attr1: "a b", attr2: "a\tb", attr3: "a\rb", attr4: "a\nb", attr5: "a\fb", attr6: "a\0b", attr7: "a\"b", attr8: "a'b", attr9: "a=b", attr10: "a>b", attr11: "a<b", attr12: "a`b"], "<script>"},
+      out: "<div attr1=\"a b\" attr2=\"a b\" attr3=ab attr4=\"a b\" attr5=ab attr6=ab attr7=a&quot;b attr8=a&apos;b attr9=\"a=b\" attr10=a&gt;b attr11=a&lt;b attr12=\"a`b\">&lt;script&gt;</div>"
+    },
     "Full" => %{
       nodes: {:html, [
         {:__comment__, "This is a test"},
@@ -31,6 +39,7 @@ defmodule HTMLBuilderTest do
       ]},
       out: """
       <!DOCTYPE html>
+      <html>
       <!-- This is a test -->
       <head>
         <title>Hello!</title>
@@ -61,6 +70,7 @@ defmodule HTMLBuilderTest do
           </ul>
         </span>
       </body>
+      </html>
       """
     }
   }
@@ -68,7 +78,8 @@ defmodule HTMLBuilderTest do
   for {name, test} <- cases do
     nodes = test.nodes |> Macro.escape()
     pretty = test.out
-    ugly = pretty |> String.split("\n") |> Enum.map(&String.lstrip/1) |> Enum.join()
+    [doctype | strip] = pretty |> String.split("\n") |> Enum.map(&String.lstrip/1)
+    ugly = "#{doctype}\n#{Enum.join(strip)}" |> String.rstrip()
 
     test "#{name} ugly" do
       actual = unquote(nodes) |> HTMLBuilder.encode!()

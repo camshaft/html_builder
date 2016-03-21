@@ -8,5 +8,7 @@ defmodule HTMLBuilder.Utils do
   def escape_character("&"), do: "&amp;"
   def escape_character("<"), do: "&lt;"
   def escape_character(">"), do: "&gt;"
+  def escape_character(original) when original in ["\0", "\f", "\r"], do: ""
+  def escape_character(original) when original in ["\t", "\n"], do: " "
   def escape_character(original), do: original
 end
