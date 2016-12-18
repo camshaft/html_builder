@@ -223,5 +223,5 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
   end
 
   defp check_quote(character) when character in [" ", "\t", "\r", "\n", "\f", "\0", "\"", "'", "=", ">", "<", "`"], do: true
-  defp check_quote(character), do: false
+  defp check_quote(_character), do: false
 end
