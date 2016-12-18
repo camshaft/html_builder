@@ -200,6 +200,10 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
         [" ", to_string(key)]
       {key, ""} ->
         [" ", to_string(key), "=\"\""]
+      {:data, keywords} when is_list(keywords) ->
+        Enum.map(keywords, fn({key, value}) ->
+          [" ", to_string("data-#{key}"), ?=, encode_attribute_value(value)]
+        end)
       {key, value} ->
         [" ", to_string(key), ?=, encode_attribute_value(value)]
     end)
