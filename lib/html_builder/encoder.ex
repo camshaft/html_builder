@@ -5,54 +5,56 @@ end
 defmodule HTMLBuilder.Pretty do
   defmacro __using__(_) do
     quote do
-      @default_indent 2
-      @default_offset 0
-
-      @compile {:inline, pretty: 1, indent: 1, offset: 1, offset: 2, spaces: 1}
-
-      defp newline(%{pretty: true}), do: "\n"
-      defp newline(_), do: []
-
-      defp indentation(%{pretty: true} = options) do
-        (indent(options) * offset(options)) |> spaces()
-      end
-      defp indentation(_) do
-        []
-      end
-
-      defp pretty(options) do
-        !!Map.get(options, :pretty)
-      end
-
-      defp indent(options) do
-        Map.get(options, :indent, @default_indent)
-      end
-
-      defp offset(options) do
-        Map.get(options, :offset, @default_offset)
-      end
-
-      defp offset(options, value) when value > 0 do
-        Map.put(options, :offset, value)
-      end
-      defp offset(options, _) do
-        Map.put(options, :offset, 0)
-      end
-
-      defp inc_offset(options) do
-        value = offset(options)
-        offset(options, value + 1)
-      end
-
-      defp dec_offset(options) do
-        value = offset(options)
-        offset(options, value - 1)
-      end
-
-      defp spaces(count) do
-        :binary.copy(" ", count)
-      end
+      import unquote(__MODULE__)
     end
+  end
+
+  @default_indent 2
+  @default_offset 0
+
+  @compile {:inline, pretty: 1, indent: 1, offset: 1, offset: 2, spaces: 1}
+
+  def newline(%{pretty: true}), do: "\n"
+  def newline(_), do: []
+
+  def indentation(%{pretty: true} = options) do
+    (indent(options) * offset(options)) |> spaces()
+  end
+  def indentation(_) do
+    []
+  end
+
+  def pretty(options) do
+    !!Map.get(options, :pretty)
+  end
+
+  def indent(options) do
+    Map.get(options, :indent, @default_indent)
+  end
+
+  def offset(options) do
+    Map.get(options, :offset, @default_offset)
+  end
+
+  def offset(options, value) when value > 0 do
+    Map.put(options, :offset, value)
+  end
+  def offset(options, _) do
+    Map.put(options, :offset, 0)
+  end
+
+  def inc_offset(options) do
+    value = offset(options)
+    offset(options, value + 1)
+  end
+
+  def dec_offset(options) do
+    value = offset(options)
+    offset(options, value - 1)
+  end
+
+  def spaces(count) do
+    :binary.copy(" ", count)
   end
 end
 
@@ -119,7 +121,7 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
   end
   def encode({el, attributes, body}, options) when el in [:html, "html", 'html'] do
     ["<!DOCTYPE html>", newline(%{pretty: true}),
-     "<html", encode_attributes(attributes), ?>,
+     "<html", encode_attributes(attributes), ">",
      HTMLBuilder.Encoder.encode(body, options),
      "</html>", newline(options)]
   end
@@ -145,19 +147,19 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
   for el <- void_elements do
     el_s = Atom.to_string(el)
     def encode({unquote(el)}, _options) do
-      [?<, unquote(el_s), ?>]
+      ["<", unquote(el_s), ">"]
     end
     def encode({unquote(el_s)}, _options) do
-      [?<, unquote(el_s), ?>]
+      ["<", unquote(el_s), ">"]
     end
     def encode({unquote(el), attributes}, _options) do
-      [?<, unquote(el_s), encode_attributes(attributes), ?>]
+      ["<", unquote(el_s), encode_attributes(attributes), ">"]
     end
     def encode({unquote(el_s), attributes}, _options) do
-      [?<, unquote(el_s), encode_attributes(attributes), ?>]
+      ["<", unquote(el_s), encode_attributes(attributes), ">"]
     end
     def encode({unquote(el_s), attributes, contents}, _options) when contents in [nil, []] do
-      [?<, unquote(el_s), encode_attributes(attributes), ?>]
+      ["<", unquote(el_s), encode_attributes(attributes), ">"]
     end
     def encode({unquote(el), _, _}, _options) do
       throw :void_element
@@ -171,22 +173,21 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
     encode({Atom.to_string(el)}, options)
   end
   def encode({el}, _options) do
-    [?<, el, ?>, "</", el, ?>]
+    ["<", el, "></", el, ">"]
   end
   def encode({el, attributes}, options) when is_atom(el) do
     encode({Atom.to_string(el), attributes}, options)
   end
   def encode({el, attributes}, _options) do
-    [?<, el, encode_attributes(attributes), ?>,
-     "</", el, ?>]
+    ["<", el, encode_attributes(attributes), "></", el, ">"]
   end
   def encode({el, attributes, contents}, options) when is_atom(el) do
     encode({Atom.to_string(el), attributes, contents}, options)
   end
   def encode({el, attributes, contents}, options) do
-    [?<, el, encode_attributes(attributes), ?>,
+    ["<", el, encode_attributes(attributes), ">",
      HTMLBuilder.Encoder.encode(contents, options),
-     "</", el, ?>]
+     "</", el, ">"]
   end
 
   defp encode_attributes(attributes) when is_nil(attributes) or map_size(attributes) == 0 or length(attributes) == 0 do
@@ -201,7 +202,7 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
       {key, ""} ->
         [" ", to_string(key), "=\"\""]
       {key, value} ->
-        [" ", to_string(key), ?=, encode_attribute_value(value)]
+        [" ", to_string(key), "=", encode_attribute_value(value)]
     end)
   end
 
@@ -213,7 +214,7 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
     must_quote = graphemes |> Enum.any?(&check_quote/1)
 
     if must_quote do
-      [?", graphemes, ?"]
+      ["\"", graphemes, "\""]
     else
       graphemes
     end
@@ -223,5 +224,5 @@ defimpl HTMLBuilder.Encoder, for: Tuple do
   end
 
   defp check_quote(character) when character in [" ", "\t", "\r", "\n", "\f", "\0", "\"", "'", "=", ">", "<", "`"], do: true
-  defp check_quote(character), do: false
+  defp check_quote(_character), do: false
 end

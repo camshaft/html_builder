@@ -1,4 +1,4 @@
-# html_builder
+# html_builder [![Build Status](https://travis-ci.org/camshaft/html_builder.svg?branch=master)](https://travis-ci.org/camshaft/html_builder)
 
 generate html in elixir with simple data structures
 
