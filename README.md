@@ -30,6 +30,8 @@ $ mix deps.get
   {"body", nil, [
     {"span", [class: "this-is-a-class\" other classes go here"], "This is a test"},
     {"span", class: "attribute-with-¨˜ˆçø"},
+    {"span", data: "This is a test."},
+    {"span", data: [foo: 1, bar: "This is a test."]},
     {"span", nil, [
       "Hello,",
       "World",
@@ -54,6 +56,8 @@ $ mix deps.get
 # <body>
 #   <span class="this-is-a-class&quot; other classes go here">This is a test</span>
 #   <span class=attribute-with-¨˜ˆçø></span>
+#   <span data="This is a test."></span>
+#   <span data-foo=1 data-bar="This is a test."></span>
 #   <span>
 #     Hello,
 #     World
