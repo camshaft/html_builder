@@ -20,22 +20,22 @@ defmodule HTMLBuilder.Pretty do
         []
       end
 
-      defp pretty(options) do
+      def pretty(options) do
         !!Map.get(options, :pretty)
       end
 
-      defp indent(options) do
+      def indent(options) do
         Map.get(options, :indent, @default_indent)
       end
 
-      defp offset(options) do
+      def offset(options) do
         Map.get(options, :offset, @default_offset)
       end
 
-      defp offset(options, value) when value > 0 do
+      def offset(options, value) when value > 0 do
         Map.put(options, :offset, value)
       end
-      defp offset(options, _) do
+      def offset(options, _) do
         Map.put(options, :offset, 0)
       end
 
@@ -49,7 +49,7 @@ defmodule HTMLBuilder.Pretty do
         offset(options, value - 1)
       end
 
-      defp spaces(count) do
+      def spaces(count) do
         :binary.copy(" ", count)
       end
     end
